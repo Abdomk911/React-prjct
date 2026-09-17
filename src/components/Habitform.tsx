@@ -2,12 +2,18 @@ import Button from "./Button";
 import FirsttEffect from "./FirsttEffect";
 import { useState, type FormEvent } from "react";
 
-export default function HabitForm() {
+type HabitFormProps = {
+  onAdd: (name: string) => void;
+}
+
+export default function HabitForm({ onAdd }: HabitFormProps) {
   const [name, setName] = useState("");
 
   function handlesubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    console.log(name);
+    if (name.trim() === "") return;
+    onAdd(name.trim());
+    setName("");
   }
 
   return (

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How Delete Works — Habit App Step by Step</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:#09090b; color:#e4e4e7; line-height:1.55; }
+  header { padding:32px 24px 12px; max-width:1000px; margin:auto; }
+  header h1 { margin:0 0 8px; font-size:28px; }
+  header h1 span { color:#a78bfa; }
+  header p { color:#a1a1aa; margin:0; }
+  main { max-width:1000px; margin:auto; padding:16px 24px 80px; display:flex; flex-direction:column; gap:20px; }
+  .card { background:#18181b; border:1px solid #27272a; border-radius:14px; padding:20px; }
+  .card h2 { margin:0 0 10px; font-size:18px; }
+  .card h2 .n { display:inline-flex; width:28px; height:28px; align-items:center; justify-content:center; background:#7c3aed; border-radius:8px; margin-right:8px; font-size:15px; }
+  .muted { color:#a1a1aa; }
+  code.inline { background:#27272a; padding:2px 7px; border-radius:6px; color:#fcd34d; font-size:13px; }
+  pre { background:#09090b; border:1px solid #27272a; border-radius:10px; padding:14px; overflow:auto; font-size:13px; margin:12px 0 0; }
+  .k { color:#c084fc; } .f { color:#7dd3fc; } .s { color:#bef264; } .c { color:#71717a; font-style:italic; } .hl { background:rgba(124,58,237,.28); border-radius:4px; padding:0 3px; }
+  .flow { display:flex; align-items:stretch; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .box { flex:1; min-width:150px; background:#27272a; border-radius:10px; padding:12px; text-align:center; border:2px solid transparent; }
+  .box.active { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.3); }
+  .box b { display:block; } .box small { color:#a1a1aa; }
+  .arrow { align-self:center; color:#7c3aed; font-size:22px; font-weight:bold; }
+  .demo-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .habit { display:flex; justify-content:space-between; align-items:center; background:#27272a; border-radius:10px; padding:10px 12px; border:1px solid #3f3f46; transition:all .4s; }
+  .habit.removing { border-color:#ef4444; background:#450a0a; transform:translateX(30px); opacity:0; }
+  .habit.kept { border-color:#22c55e; }
+  .habit .id { font-size:11px; color:#a1a1aa; }
+  .del { background:transparent; border:0; color:#f87171; cursor:pointer; font-weight:bold; font-size:14px; }
+  .del:hover { color:#fca5a5; text-decoration:underline; }
+  .btn { background:#7c3aed; color:white; border:0; border-radius:8px; padding:9px 16px; cursor:pointer; font-weight:bold; margin-right:8px; }
+  .btn.ghost { background:#27272a; } .btn:hover { filter:brightness(1.15); }
+  #log { background:#09090b; border:1px solid #27272a; border-radius:10px; min-height:170px; padding:12px; font-size:13px; white-space:pre-wrap; margin-top:12px; }
+  .lg-click { color:#f87171; } .lg-call { color:#7dd3fc; } .lg-filter { color:#fcd34d; } .lg-state { color:#bef264; } .lg-render { color:#c084fc; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; margin:2px 4px 2px 0; background:#27272a; border:1px solid #3f3f46; }
+  .pill.keep { border-color:#22c55e; color:#bbf7d0; } .pill.drop { border-color:#ef4444; color:#fecaca; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+  td,th { border:1px solid #27272a; padding:8px; text-align:left; } th { background:#27272a; }
+</style>
+</head>
+<body>
+<header>
+  <h1>How <span>Delete</span> works — step by step</h1>
+  <p>Your real code: <code class="inline">App.tsx → HabitListe.tsx → &lt;span onClick&gt;</code>. Click a Delete button below and watch each step light up.</p>
+</header>
+<main>
+
+  <div class="card">
+    <h2><span class="n">0</span> The chain (prop drilling)</h2>
+    <div class="flow" id="flow">
+      <div class="box" data-s="app"><b>App.tsx</b><small>owns state<br><code class="inline">habits</code> + <code class="inline">deleteHabit(id)</code></small></div>
+      <div class="arrow">→</div>
+      <div class="box" data-s="list"><b>HabitList</b><small>receives<br><code class="inline">habits, onDelete</code></small></div>
+      <div class="arrow">→</div>
+      <div class="box" data-s="item"><b>HabitItem</b><small>receives<br><code class="inline">habit, onDelete</code></small></div>
+      <div class="arrow">→</div>
+      <div class="box" data-s="span"><b>&lt;span&gt; Delete</b><small><code class="inline">onClick={() =&gt; onDelete(habit.id)}</code></small></div>
+    </div>
+<pre><span class="c">// App.tsx:34 — pass function DOWN (don't call it, just pass reference)</span>
+&lt;<span class="k">HabitList</span> <span class="f">habits</span>=<span class="s">{habits}</span> <span class="f">onDelete</span>=<span class="s">{deleteHabit}</span> /&gt;
+
+<span class="c">// HabitListe.tsx:14 — receive it</span>
+<span class="k">function</span> <span class="f">HabitList</span>({ habits, onDelete }: HabitListProps)
+
+<span class="c">// HabitListe.tsx:27 — forward it to each row</span>
+&lt;<span class="k">HabitItem</span> <span class="f">habit</span>=<span class="s">{habit}</span> <span class="f">onDelete</span>=<span class="s">{onDelete}</span> /&gt;
+
+<span class="c">// HabitListe.tsx:51 — call it with THIS row's id on click</span>
+&lt;span <span class="hl">onClick={() =&gt; onDelete(habit.id)}</span>&gt;Delete&lt;/span&gt;</pre>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1</span> LIVE DEMO — click any Delete</h2>
+    <p class="muted">This is a mini clone of your state. Open DevTools console too — every step is logged. Watch the log + the boxes above.</p>
+    <div>
+      <button class="btn" onclick="resetDemo()">Reset demo</button>
+      <button class="btn ghost" onclick="autoPlay()">▶ Auto-play one delete</button>
+    </div>
+    <div class="demo-list" id="demo"></div>
+    <div id="log">Log ready. Click a Delete button…</div>
+<pre><span class="c">// App.tsx:25-27 — the ONLY place state changes:</span>
+<span class="k">function</span> <span class="f">deleteHabit</span>(id: string) {
+  <span class="f">setHabits</span>((prev) =&gt; prev.<span class="f">filter</span>((h) =&gt; h.id !== id));
+}</pre>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> What <code class="inline">filter()</code> does inside</h2>
+    <p class="muted">Say state is 3 habits and you delete <code class="inline">id-2</code>. Filter builds a <b>new array</b>, keeping only items where <code class="inline">h.id !== id</code> is true:</p>
+    <table>
+      <tr><th>item</th><th>check <code class="inline">h.id !== "id-2"</code></th><th>result</th></tr>
+      <tr><td>☕ Drink water (id-1)</td><td><code class="inline">"id-1" !== "id-2"</code> → true</td><td><span class="pill keep">KEEP ✅</span></td></tr>
+      <tr><td>📖 Read (id-2)</td><td><code class="inline">"id-2" !== "id-2"</code> → false</td><td><span class="pill drop">DROP ❌</span></td></tr>
+      <tr><td>🏃 Run (id-3)</td><td><code class="inline">"id-3" !== "id-2"</code> → true</td><td><span class="pill keep">KEEP ✅</span></td></tr>
+    </table>
+    <p class="muted">New array = <code class="inline">[id-1, id-3]</code>. Old array is never mutated — React needs a <b>new reference</b> to know it must re-render. That's why we use <code class="inline">filter</code> and not <code class="inline">splice</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span> Re-render + why <code class="inline">key</code> matters</h2>
+<pre><span class="c">// HabitListe.tsx:25-29</span>
+{habits.<span class="f">map</span>((habit) =&gt; (
+  &lt;li <span class="hl">key={habit.id}</span>&gt;   <span class="c">// ← stable identity</span>
+    &lt;<span class="k">HabitItem</span> habit={habit} onDelete={onDelete} /&gt;
+  &lt;/li&gt;
+))}</pre>
+    <p class="muted">After <code class="inline">setHabits(newArray)</code>: React re-runs <code class="inline">App</code> → <code class="inline">HabitList</code> with 2 items instead of 3. Because each <code class="inline">&lt;li&gt;</code> has <code class="inline">key={habit.id}</code>, React knows exactly which DOM node belonged to <code class="inline">id-2</code> and removes only that one. Without a stable key (e.g. using index), the wrong row could disappear.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span> The closure trap (most common bug)</h2>
+<pre><span class="c">// ✅ CORRECT — arrow function: runs ONLY when clicked</span>
+&lt;span onClick={() =&gt; onDelete(habit.id)}&gt;Delete&lt;/span&gt;
+
+<span class="c">// ❌ WRONG — calls during render: deletes everything instantly / infinite loop</span>
+&lt;span onClick={onDelete(habit.id)}&gt;Delete&lt;/span&gt;</pre>
+    <p class="muted">Each row's <code class="inline">() =&gt; onDelete(habit.id)</code> is a <b>closure</b>: it remembers that row's own <code class="inline">habit.id</code>. That's how the generic <code class="inline">deleteHabit(id)</code> in App knows <i>which</i> one you clicked.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span> Full loop + localStorage</h2>
+<pre><span class="c">// App.tsx:17-19 — after every habits change, persist:</span>
+<span class="f">useEffect</span>(() =&gt; {
+  localStorage.<span class="f">setItem</span>(<span class="s">"habits"</span>, JSON.stringify(habits));
+}, [habits]);</pre>
+    <p class="muted">Click → <code class="inline">onDelete(id)</code> → <code class="inline">filter</code> → <code class="inline">setHabits</code> → re-render (one <code class="inline">&lt;li&gt;</code> gone) → <code class="inline">useEffect</code> saves new array to localStorage. Refresh-proof.</p>
+  </div>
+
+</main>
+<script>
+  let habits = [
+    { id: "id-1", name: "☕ Drink water" },
+    { id: "id-2", name: "📖 Read 10 pages" },
+    { id: "id-3", name: "🏃 Run" },
+  ];
+  const demo = document.getElementById("demo");
+  const logEl = document.getElementById("log");
+  const boxes = document.querySelectorAll(".box");
+
+  function light(stage) {
+    boxes.forEach(b => b.classList.toggle("active", b.dataset.s === stage));
+  }
+  function log(html, cls="") {
+    logEl.innerHTML += `\n<span class="${cls}">${html}</span>`;
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log(html.replace(/<[^>]+>/g,""));
+  }
+  function render(highlightId=null, keptIds=[]) {
+    demo.innerHTML = "";
+    if (!habits.length) { demo.innerHTML = '<p class="muted">No habits — list is empty (like your "No habits added yet" state).</p>'; return; }
+    habits.forEach(h => {
+      const d = document.createElement("div");
+      d.className = "habit" + (h.id===highlightId ? " removing" : "") + (keptIds.includes(h.id) ? " kept" : "");
+      d.innerHTML = `<div><div>${h.name}</div><div class="id">${h.id}</div></div>`;
+      const b = document.createElement("button");
+      b.className = "del"; b.textContent = "Delete";
+      b.onclick = () => deleteVisual(h.id);
+      d.appendChild(b);
+      demo.appendChild(d);
+    });
+  }
+  function deleteVisual(id) {
+    logEl.innerHTML = "";
+    const target = habits.find(h=>h.id===id);
+    light("span");
+    log(`① CLICK → &lt;span&gt; for "${target.name}" fired. Closure remembers habit.id = "${id}"`, "lg-click");
+    setTimeout(()=>{
+      light("item");
+      log(`② HabitItem calls onDelete("${id}") → forwarded up (prop drilling).`, "lg-call");
+    },600);
+    setTimeout(()=>{
+      light("list");
+      log(`③ HabitList's onDelete is really App's deleteHabit("${id}"). Running filter:`, "lg-filter");
+      habits.forEach(h=>{
+        const keep = h.id!==id;
+        log(`&nbsp;&nbsp;&nbsp;${h.id} !== ${id} → ${keep} ${keep?"<b>KEEP ✅</b>":"<b>DROP ❌</b>"}`, "lg-filter");
+      });
+      render(id, habits.filter(h=>h.id!==id).map(h=>h.id));
+    },1300);
+    setTimeout(()=>{
+      light("app");
+      habits = habits.filter(h=>h.id!==id);
+      log(`④ setHabits(newArray) → new length ${habits.length}. Old array untouched (immutability).`, "lg-state");
+      log(`⑤ React re-renders. key="${id}" node removed. useEffect saves ${habits.length} habits to localStorage.`, "lg-render");
+      render();
+    },2200);
+  }
+  function resetDemo(){
+    habits = [
+      { id:"id-1", name:"☕ Drink water" },
+      { id:"id-2", name:"📖 Read 10 pages" },
+      { id:"id-3", name:"🏃 Run" },
+    ];
+    logEl.textContent = "Log ready. Click a Delete button…";
+    light(null); render();
+  }
+  function autoPlay(){ if(habits.length) deleteVisual(habits[Math.min(1,habits.length-1)].id); }
+  render();
+</script>
+</body>
+</html>

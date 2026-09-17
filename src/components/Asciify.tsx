@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 "use client";
 
 import {
@@ -478,7 +479,9 @@ function paintFallbackMedia(
       targetWidth,
       targetHeight,
     );
-  } catch {}
+  } catch {
+    void 0;
+  }
 }
 
 function isFallbackMediaOriginClean(
@@ -725,7 +728,9 @@ function initializeAsciify(
         contentDirty = true;
         scheduleTextMask();
         wake();
-      } catch {}
+      } catch {
+        void 0;
+      }
     };
   }
 
