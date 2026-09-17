@@ -3,7 +3,7 @@
 @font-face {
   font-family: "SF Rounded";
   /* Fix: Use forward slashes and relative pathing */
-  src: url("./Font/FontsFree-Net-SF-Pro-Rounded-Bold.ttf") format("truetype");
+  src: url("../Font/FontsFree-Net-SF-Pro-Rounded-Bold.ttf") format("truetype");
   font-weight: bold; /* Updated to bold since your file is the Bold variant */
   font-style: normal;
   font-display: swap;
