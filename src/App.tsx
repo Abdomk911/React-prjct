@@ -13,7 +13,7 @@ useEffect(() => {
   localStorage.setItem("habits", JSON.stringify(habits));
 }, [habits]);
   function addhabit(name: string) {
-    setHabit((curr) => [...curr, { id: crypto.randomUUID(), name }]);
+    setHabit((curr) => [...curr, { id: crypto.randomUUID(), name , completions: []}]);
   }    
     
 function deleteHabit(id: string) {
